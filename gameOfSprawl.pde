@@ -1,8 +1,12 @@
-// Size of cells
-int cellSize = 5;
+import gifAnimation.*;
 
-// How likely for a cell to be alive at start (in percentage)
-float probabilityOfAliveAtStart = 15;
+GifMaker gifExport;
+
+
+int cellSize = 5;    // Size of cells
+
+String gifName;
+float probabilityOfAliveAtStart = 15;  // How likely for a cell to be alive at start (in percentage)
 
 // Variables for timer
 int interval = 100;
@@ -14,43 +18,54 @@ color dead = color(200,200,200);
 color virgin = color(255,255,255);
 color water = color(240,255,240);
 
-// Array of cells
-int[][] cells; 
-// Buffer to record the state of the cells and use this while changing the others in the interations
-int[][] cellsBuffer; 
 
-// Pause
+int[][] cells; // Array of cells 
+
+int[][] cellsBuffer; // Buffer to record the state of the cells and use this while changing the others in the interations 
+
 boolean pause = false;
+
+float state; //initialization based on pixel brightness. dead(0) alive(255) water(190)
+
+float initialitation_state;
 
 PImage img;
 
+
+// ===
+
 void setup() {
-  img = loadImage("base_montevideo.png");
-  size(1549,767);
   
+  gifName = "montevideo";
+  
+  img = loadImage("static/base_montevideo.png");
+  size(1549,767);
   img.loadPixels();
 
+
+  gifExport = new GifMaker(this, "out/"+gifName+".gif");
+  gifExport.setRepeat(0); // 0 means "loop forever"
+  
   // Instantiate arrays 
   cells = new int[width/cellSize][height/cellSize];
   cellsBuffer = new int[width/cellSize][height/cellSize];
 
-  // This stroke will draw the background grid
+
   
 
   noSmooth();
 
-  // Initialization of cells
+// Initialization of cells
   for (int x=0; x<width/cellSize; x++) {
     
     for (int y=0; y<height/cellSize; y++) {
       
-      float state = brightness(img.pixels[x*cellSize+y*cellSize*width]);
-
+      initialitation_state = brightness(img.pixels[x*cellSize+y*cellSize*width]);
       
-      if (state == 0) { 
+      if (initialitation_state == 0) { 
         state = 1;
       }
-      else if (state==109){
+      else if (initialitation_state == 109){
         state = 2;
       }else{
       state = 3;
@@ -63,7 +78,7 @@ void setup() {
 
 
 void draw() {
-    //noLoop();
+
   //Draw grid
   for (int x=0; x<width/cellSize; x++) {
     for (int y=0; y<height/cellSize; y++) {
@@ -83,6 +98,9 @@ void draw() {
       rect (x*cellSize, y*cellSize, cellSize, cellSize);
     }
   }
+  
+  
+  
   // Iterate if timer ticks
   if (millis()-lastRecordedTime>interval) {
     if (!pause) {
@@ -91,8 +109,12 @@ void draw() {
     }
   }
 
-  // Create  new cells manually on pause
+
+
+// Create  new cells manually on pause
+
   if (pause && mousePressed) {
+    
     // Map and avoid out of bound errors
     int xCellOver = int(map(mouseX, 0, width, 0, width/cellSize));
     xCellOver = constrain(xCellOver, 0, width/cellSize-1);
@@ -117,7 +139,12 @@ void draw() {
       }
     }
   }
-  //saveFrame("laPlata-######.png");
+
+  if(millis()>2000){
+    gifExport.addFrame();
+  }
+  
+
 }
 
 
@@ -130,7 +157,7 @@ void iteration() { // When the clock ticks
     }
   }
 
-  // Visit each cell:
+// Visit each cell:
   for (int x=0; x<width/cellSize; x++) {
     for (int y=0; y<height/cellSize; y++) {
       // And visit all the neighbours of each cell
@@ -147,11 +174,12 @@ void iteration() { // When the clock ticks
               }else if(cellsBuffer[xx][yy]==2){
                 water ++;
               }
-            } // End of if
-          } // End of if
-        } // End of yy loop
-      } //End of xx loop
-      // We've checked the neigbours: apply rules!
+            } 
+          } 
+        } 
+      } 
+      
+// We've checked the neigbours: apply rules!
       if (cellsBuffer[x][y]==1) { // The cell is alive: kill it if necessary
         if (neighbours < 2 || neighbours > 3 ) {
           cells[x][y] = 0; // Die unless it has 2 or 3 neighbours
@@ -163,11 +191,12 @@ void iteration() { // When the clock ticks
         if (neighbours == 3 ) {
           cells[x][y] = 1; // Only if it has 3 neighbours
         }
-      } // End of if
-    } // End of y loop
-  } // End of x loop
-} // End of function
+      } 
+    }
+  } 
+} 
 
+// if 'R' is pressed, randomize view
 void keyPressed() {
   if (key=='r' || key == 'R') {
     // Restart: reinitialization of cells
@@ -184,9 +213,19 @@ void keyPressed() {
       }
     }
   }
+  
+//if 'space' is pressed, pause sim  
   if (key==' ') { // On/off of pause
     pause = !pause;
+    //saveFrame("saved/-######.png");
+    
+    gifExport.setDelay(30);
+    gifExport.addFrame();
+    gifExport.finish();
+
   }
+  
+//if 'C' is pressed, clear view
   if (key=='c' || key == 'C') { // Clear all
     for (int x=0; x<width/cellSize; x++) {
       for (int y=0; y<height/cellSize; y++) {
