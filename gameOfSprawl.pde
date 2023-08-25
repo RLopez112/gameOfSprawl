@@ -38,8 +38,8 @@ void setup() {
   
   gifName = "montevideo";
   
-  img = loadImage("static/base_montevideo.png");
-  size(1549,767);
+  img = loadImage("static/base.png");
+  size(1077,513);
   img.loadPixels();
 
 
